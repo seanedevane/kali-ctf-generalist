@@ -1,24 +1,23 @@
 ---
   - hosts: localhost
+    connection: local
     become: yes
     vars:
       docker_repo_key: "https://download.docker.com/linux/debian/gpg"
-      docker_repo_key_path: /etc/apt/trusted.gpg.d/docker-ce-keyring.gpg
+      docker_repo_key_path: /etc/apt/keyrings/docker-ce-keyring.gpg
       docker_repo: "deb [arch=amd64] https://download.docker.com/linux/debian bullseye stable"
       docker_group: "docker"
       codium_repo: "deb [ signed-by=/usr/share/keyrings/vscodium-archive-keyring.gpg ] https://download.vscodium.com/debs vscodium main"
-      vivaldi_repo: "deb https://repo.vivaldi.com/archive/deb/ stable main"
+      vivaldi_url: "https://downloads.vivaldi.com/stable/vivaldi-stable_5.7.2921.60-1_amd64.deb"
     tasks:
     - name: Add Docker's official GPG key
       ansible.builtin.shell: |
-        sudo mkdir -p /etc/apt/keyrings
-        wget -O- {{ docker_repo_key }} | gpg --dearmor | sudo tee /etc/apt/keyrings/docker.gpg > /dev/null
-      state: present
+        wget -q0 - {{ docker_repo_key }} | gpg --dearmor | sudo dd of={{ docker_repo_key_path }}
 
     - name: Add Docker Repo
-    ansible.builtin.apt_repository:
-      repo: "{{ docker_repo }}"
-      state: present
+      ansible.builtin.apt_repository:
+        repo: "{{ docker_repo }}"
+        state: present
 
     - name: Add VS Codium GPG key
       ansible.builtin.shell: |
@@ -29,17 +28,16 @@
         repo: "{{ codium_repo }}"
         state: present
 
-    - name: Add Vivaldi repo
-      ansible.builtin.apt_repository:
-        repo: "{{ vivaldi_repo }}"
-        state: present
+    - name: Download and install Vivaldi deb
+      ansible.builtin.apt:
+        deb: "{{ vivaldi_url }}"
 
-      -name: Ensure all packages are up to date
+    - name: Ensure all packages are up to date
       ansible.builtin.apt:
         update_cache: yes
         upgrade: dist
 
-      -name: Installing any one-off packages from apt package manager
+    - name: Installing any one-off packages from apt package manager
       ansible.builtin.package:
         name:
         - bloodhound
@@ -95,7 +93,7 @@
         - yarn
         - zaproxy
         - zlib1g-dev
-      state: latest
+        state: latest
 
     - name: Getting all interactive non-root users
       ansible.builtin.shell: "awk -F: '{ if ( if ($3 => 1000 && $3 != 65534) print $1}' /etc/passwd"
@@ -123,13 +121,13 @@
       register: cme_installed
 
     - name: Install CME
-    ansible.builtin.shell: |
-      curl -s https://api.github.com/repos/Porchetta-Industries/CrackMapExec/releases/latest | grep "cme-ubuntu-latest-3.10.zip" | cut -d : -f 2,3 | tr -d \" | wget -qi -
+      ansible.builtin.shell: |
+        curl -s https://api.github.com/repos/Porchetta-Industries/CrackMapExec/releases/latest | grep "cme-ubuntu-latest-3.10.zip" | cut -d : -f 2,3 | tr -d \" | wget -qi -
         unzip cme-*.zip
         rm -f cme-*.zip
         mv cme /usr/bin/cme
         chmod 755 /usr/bin/cme
-    when: not _cme_installed.stat.exists
+      when: not _cme_installed.stat.exists
 
     - name: Install pwntools
       ansible.builtin.pip:
@@ -137,11 +135,11 @@
 
     - name: Install git-dumper
       ansible.builtin.pip:
-        name: git-dumper
+          name: git-dumper
 
     - name: Install faker
       ansible.builtin.pip:
-        name: faker
+          name: faker
 
     - name: Install trufflehog
       ansible.builtin.pip:
@@ -190,6 +188,7 @@
         dest: /opt/LinEnum
 
     - name: Clone PEASS
+      ansible.builtin.git:
         repo: 'https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite'
         dest: /opt/privilege-escalation-awesome-scripts-suite
 
@@ -248,6 +247,9 @@
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
         ~/.cargo/bin/cargo install rustscan
         ~/.cargo/bin/cargo install feroxbuster
+
+    - name: Setup terminator
+      ansible.builtin.shell: |
 
     - name: Fish shell setup
       ansible.builtin.shell: |

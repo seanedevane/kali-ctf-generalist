@@ -36,6 +36,9 @@ chmod +x install.sh
 ./install.sh
 cd ~
 
-# Setup Terminator
-mkdir ~/.config/terminator
-cp ./terminatorconfig ~/.config/terminator/config
+echo "--------------------------------------------"
+echo "          Running Ansible playbook          "
+echo "          This may take some time           "
+echo "--------------------------------------------"
+
+ansible-playbook ./kali.yml
