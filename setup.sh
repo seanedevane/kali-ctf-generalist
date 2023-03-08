@@ -25,7 +25,7 @@ echo "--------------------------------------------"
 echo "              Installing Ansible            "
 echo "--------------------------------------------"
 
-pip install ansible
+pip3 install ansible
 
 # Setup fonts
 mkdir ~/Scripts
