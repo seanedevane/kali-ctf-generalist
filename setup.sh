@@ -27,14 +27,16 @@ echo "--------------------------------------------"
 
 pip3 install ansible
 
+echo "Setting up fonts..."
 # Setup fonts
 mkdir ~/Scripts
-cd ~/Scripts
+pushd ~/Scripts > /dev/null
 git clone https://github.com/powerline/fonts
-cd fonts
+popd > /dev/null
+pushd ~/Scripts/fonts > /dev/null
 chmod +x install.sh
 ./install.sh
-cd ~
+popd > /dev/null
 
 echo "--------------------------------------------"
 echo "          Running Ansible playbook          "
