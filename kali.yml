@@ -262,5 +262,3 @@
       ansible.builtin.shell: |
         curl -kL https://get.oh-my.fish | fish
         fish -c "omf install bobthefish && exit"
-        echo "set -x PATH \$PATH $HOME/.cargo/bin" >> ~/.config/fish/config.fish
-        echo "Setup is complete! If you wish to use fish, run:\nchsh -s /usr/bin/fish"
