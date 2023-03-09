@@ -5,14 +5,15 @@
     vars:
       docker_repo_key: "https://download.docker.com/linux/debian/gpg"
       docker_repo_key_path: /etc/apt/keyrings/docker-ce-keyring.gpg
-      docker_repo: "deb [arch=amd64] https://download.docker.com/linux/debian bullseye stable"
+      docker_repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker-ce-keyring.gpg] https://download.docker.com/linux/debian bullseye stable"
       docker_group: "docker"
       codium_repo: "deb [ signed-by=/usr/share/keyrings/vscodium-archive-keyring.gpg ] https://download.vscodium.com/debs vscodium main"
       vivaldi_url: "https://downloads.vivaldi.com/stable/vivaldi-stable_5.7.2921.60-1_amd64.deb"
+      cargo_installs: [rustscan,feroxbuster]
     tasks:
     - name: Add Docker's official GPG key
       ansible.builtin.shell: |
-        wget -q0 - {{ docker_repo_key }} | gpg --dearmor | sudo dd of={{ docker_repo_key_path }}
+        wget -qO - {{ docker_repo_key }} | gpg --dearmor | sudo dd of={{ docker_repo_key_path }}
 
     - name: Add Docker Repo
       ansible.builtin.apt_repository:
@@ -31,6 +32,16 @@
     - name: Download and install Vivaldi deb
       ansible.builtin.apt:
         deb: "{{ vivaldi_url }}"
+
+    - name: Install Rust
+      ansible.builtin.shell: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+    - name: Install Cargo packages
+      with_items: "{{ cargo_installs }}"
+      shell: "bash -lc 'cargo install -q {{ item }}'"
+      loop: "{{ cargo_installs }}"
+      register: op
 
     - name: Ensure all packages are up to date
       ansible.builtin.apt:
@@ -52,12 +63,12 @@
         - docker
         - docker-compose
         - eog
-        - feroxbuster
         - fish
         - flex
         - forensics-extra
         - gawk
         - gedit
+        - ghidra
         - git
         - gobuster
         - golang-go
@@ -96,11 +107,11 @@
         state: latest
 
     - name: Getting all interactive non-root users
-      ansible.builtin.shell: "awk -F: '{ if ( if ($3 => 1000 && $3 != 65534) print $1}' /etc/passwd"
+      ansible.builtin.shell: "awk -F: '($3 >= 1000) && ($3 != 65534) { print $1 }' /etc/passwd"
       register: users
 
     - name: Add non-root users to the docker group
-      loop: "{{ users.stdout_line }}"
+      loop: "{{ users.stdout_lines }}"
       ansible.builtin.user:
         name: "{{ item }}"
         groups: "{{ docker_group }}"
@@ -127,7 +138,7 @@
         rm -f cme-*.zip
         mv cme /usr/bin/cme
         chmod 755 /usr/bin/cme
-      when: not _cme_installed.stat.exists
+      when: not cme_installed.stat.exists
 
     - name: Install pwntools
       ansible.builtin.pip:
@@ -242,14 +253,10 @@
         state: latest
         user_install: no
 
-    - name: Install Rust and Rust tooling with rustup script
+    - name: Setting up Terminator
       ansible.builtin.shell: |
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        ~/.cargo/bin/cargo install rustscan
-        ~/.cargo/bin/cargo install feroxbuster
-
-    - name: Setup terminator
-      ansible.builtin.shell: |
+        mkdir ~/.config/terminator
+        cp ./terminatorconfig ~/.config/terminator/config
 
     - name: Fish shell setup
       ansible.builtin.shell: |
