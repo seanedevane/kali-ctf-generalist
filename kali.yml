@@ -244,10 +244,14 @@
         state: latest
         user_install: no
 
-    - name: Install Stego-toolkit
+    - name: Clone Stego-toolkit
       ansible.builtin.git:
         repo: 'https://github.com/blackhatethicalhacking/stego-toolkit.git'
         dest: '/home/{{ local_username.stdout }}/Scripts/stego-toolkit'
+    - name: Clone SecLists
+      ansible.builtin.git:
+        repo: 'https://github.com/danielmiessler/SecLists.git'
+        dest: '/home/{{ local_username.stdout }}/Scripts/SecLists'
 
     - name: Clone Powerline fonts
       ansible.builtin.git:
