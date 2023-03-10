@@ -11,6 +11,12 @@
       vivaldi_url: "https://downloads.vivaldi.com/stable/vivaldi-stable_5.7.2921.60-1_amd64.deb"
       cargo_installs: [rustscan,feroxbuster]
     tasks:
+    - name: get the local username
+      local_action: command logname
+      register: local_username
+
+
+
     - name: Add Docker's official GPG key
       ansible.builtin.shell: |
         wget -qO - {{ docker_repo_key }} | gpg --dearmor | sudo dd of={{ docker_repo_key_path }}
@@ -32,16 +38,6 @@
     - name: Download and install Vivaldi deb
       ansible.builtin.apt:
         deb: "{{ vivaldi_url }}"
-
-    - name: Install Rust
-      ansible.builtin.shell: |
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-
-    - name: Install Cargo packages
-      with_items: "{{ cargo_installs }}"
-      shell: "bash -lc 'cargo install -q {{ item }}'"
-      loop: "{{ cargo_installs }}"
-      register: op
 
     - name: Ensure all packages are up to date
       ansible.builtin.apt:
@@ -168,11 +164,6 @@
       ansible.builtin.pip:
         name: ldapdomaindump
 
-    - name: Install Stego-toolkit
-      ansible.builtin.git:
-        repo: 'https://github.com/blackhatethicalhacking/stego-toolkit.git'
-        dest: '~/Scripts/stego-toolkit'
-
     - name: Clone the Invoke-Obfuscation repo
       ansible.builtin.git:
         repo: 'https://github.com/danielbohannon/Invoke-Obfuscation'
@@ -253,10 +244,32 @@
         state: latest
         user_install: no
 
+    - name: Install Stego-toolkit
+      ansible.builtin.git:
+        repo: 'https://github.com/blackhatethicalhacking/stego-toolkit.git'
+        dest: '/home/{{ local_username.stdout }}/Scripts/stego-toolkit'
+
+    - name: Clone Powerline fonts
+      ansible.builtin.git:
+        repo: 'https://github.com/powerline/fonts'
+        dest: '/home/{{ local_username.stdout }}/Scripts/fonts'
+
+    - name: Install Powerline fonts
+      ansible.builtin.command: "/home/{{ local_username.stdout }}/Scripts/fonts/install.sh"
+    - name: Install Rust
+      ansible.builtin.shell: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+    - name: Install Cargo packages
+      with_items: "{{ cargo_installs }}"
+      shell: "bash -lc 'cargo install -q {{ item }}'"
+      loop: "{{ cargo_installs }}"
+      register: op
+
     - name: Setting up Terminator
       ansible.builtin.shell: |
-        mkdir ~/.config/terminator
-        cp ./terminatorconfig ~/.config/terminator/config
+        mkdir /home/{{ local_username.stdout }}/.config/terminator
+        cp ./terminatorconfig /home/{{ local_username.stdout }}/.config/terminator/config
 
     - name: Check if oh-my-fish repo exists
       ansible.builtin.stat:
