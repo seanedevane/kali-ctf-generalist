@@ -292,3 +292,11 @@
 
     - name: Install bobthefish theme
       ansible.builtin.shell: fish -c "omf install bobthefish && exit"
+
+    - name: Fix Scripts directory ownership permissions
+      ansible.builtin.file:
+        path: '/home/{{ local_username.stdout }}/Scripts'
+        state: directory
+        recurse: yes
+        owner: '{{ local_username.stdout }}'
+        group: '{{ local_username.stdout }}'
