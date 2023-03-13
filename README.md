@@ -5,8 +5,17 @@ This project provisions fresh Kali virtual machines with additional tools and ut
 
 **Future plans**: The current iteration of this playbook is straightforward and not modular. Updates may include creating role based playbooks to allow for smaller builds for specific use cases (e.g. not adding in additional tools like Node for Javascript work). Otherwise I'm primarily expecting to add and/or prune the included packages based on what I'm using regularly (or not).
 
+<!-- Getting started -->
+### Getting Started
+
+A few key packages/software to mention that are included here:
+
+* Vivaldi Browser
+* Fish shell & Terminator
+* [VSCodium](https://vscodium.com): VSCode without telemetry from MS. From the terminal this runs as `codium`.
+
 <!-- Installation -->
-### Installation
+## Installation
 
 Instructions here are assuming you have a fresh install of Kali.
 
@@ -16,12 +25,3 @@ Instructions here are assuming you have a fresh install of Kali.
 1. Let the script run. This will take a **while**. In my experience up to a couple of hours due to the initial `apt update` and package installs.
 
 NOTE: this script is currently only intended for single-user installs. If you have multiple users this will not create the `~/Scripts` directory and add in SecLists, stego-toolkit, or the Powerline fonts to that user's home.
-
-<!-- Getting started -->
-### Getting Started
-
-A few key packages/software to mention that are included here:
-
-* Vivaldi Browser
-* Fish shell & Terminator
-* [VSCodium](https://vscodium.com): VSCode without telemetry from MS. From the terminal this runs as `codium`.
